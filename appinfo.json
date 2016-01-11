@@ -1,0 +1,40 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "Akihito Tanaka",
+    "longName": "MonkeyYearWatchface",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/manu_icon.png",
+                "menuIcon": true,
+                "name": "IMAGES_MENU_ICON_PNG",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/MonkeyWatchface.png",
+                "name": "MONKEY_WATCHFACE_PNG",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "bitmap"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "MonkeyYear",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "417e91ee-f9a2-4977-a09e-dbedd81cd526",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
