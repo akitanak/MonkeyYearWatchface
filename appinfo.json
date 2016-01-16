@@ -10,17 +10,25 @@
     "resources": {
         "media": [
             {
-                "file": "images/manu_icon.png",
-                "menuIcon": true,
-                "name": "IMAGES_MENU_ICON_PNG",
+                "file": "images/monkeyWatchface.png",
+                "name": "MONKEY_WATCHFACE_PNG",
                 "targetPlatforms": [
                     "basalt"
                 ],
                 "type": "bitmap"
             },
             {
-                "file": "images/MonkeyWatchface.png",
-                "name": "MONKEY_WATCHFACE_PNG",
+                "file": "images/monkeyWatchfaceSad.png",
+                "name": "MONKEY_WATCHFACE_SAD_PNG",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/manu_icon.png",
+                "menuIcon": true,
+                "name": "IMAGES_MENU_ICON_PNG",
                 "targetPlatforms": [
                     "basalt"
                 ],
