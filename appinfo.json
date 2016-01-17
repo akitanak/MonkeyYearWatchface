@@ -1,5 +1,9 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "KEY_CONDITION": 1,
+        "KEY_CONDITION_ID": 2,
+        "KEY_TEMPERATURE": 0
+    },
     "capabilities": [
         "location",
         "configurable"

@@ -1,29 +1,54 @@
 #include <pebble.h>
 
+#define THRESHOLD_BAD_WEATHER_LOWER 800
+#define THRESHOLD_BAD_WEATHER_UPPER 804
+
 static Window *s_main_window;
 static TextLayer *s_time_layer;
 
 static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
 
-static void update_time() {
-  // Get a tm structure
-  time_t temp = time(NULL);
-  struct tm *tick_time = localtime(&temp);
+// Store incoming information
+static char temperature_buffer[8];
+static char condition_buffer[32];
 
-  // Write the current hours and minutes into a buffer
-  static char s_buffer[8];
-  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?
-                                          "%H:%M" : "%I:%M", tick_time);
+enum {
+  KEY_TEMPERATURE = 0,
+  KEY_CONDITION,
+  KEY_CONDITION_ID    
+};
 
-  // Display this time on the TextLayer
-  text_layer_set_text(s_time_layer, s_buffer);
-}
-
+/*
+ * Communicate Phone
+ */
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  // Open AppMessage
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  
+  int condition_id = 800;
+  
+  // Read tuples for data
+  Tuple *temp_tuple = dict_find(iterator, KEY_TEMPERATURE);
+  Tuple *condition_tuple = dict_find(iterator, KEY_CONDITION);
+  Tuple *condition_id_tuple = dict_find(iterator, KEY_CONDITION_ID);
 
+  // If all data is available, use it
+  if(temp_tuple && condition_tuple) {
+    snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)temp_tuple->value->int32);
+    snprintf(condition_buffer, sizeof(condition_buffer), "%s", condition_tuple->value->cstring);
+  }
+  
+  if(condition_id_tuple) {
+    condition_id = condition_id_tuple->value->int32;
+    if(condition_id < THRESHOLD_BAD_WEATHER_LOWER || condition_id > THRESHOLD_BAD_WEATHER_UPPER) {
+      APP_LOG(APP_LOG_LEVEL_INFO, "face change to BAD weather.");
+      s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MONKEY_WATCHFACE_SAD_PNG);
+      bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+    } else {
+      APP_LOG(APP_LOG_LEVEL_INFO, "face change to FINE weather.");
+      s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_MONKEY_WATCHFACE_PNG);
+      bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+    }
+  }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -38,6 +63,26 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
+
+/*
+ * update time
+ */
+static void update_time() {
+  // Get a tm structure
+  time_t temp = time(NULL);
+  struct tm *tick_time = localtime(&temp);
+
+  // Write the current hours and minutes into a buffer
+  static char s_buffer[8];
+  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?
+                                          "%H:%M" : "%I:%M", tick_time);
+  // Display this time on the TextLayer
+  text_layer_set_text(s_time_layer, s_buffer);
+}
+
+/*
+ * load Main window
+ */
 static void main_window_load(Window *window) {
 
   Layer *window_layer = window_get_root_layer(window);
@@ -73,6 +118,20 @@ static void main_window_load(Window *window) {
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
+  
+  // Get weather update every 30 minutes
+  if(tick_time->tm_min % 30 == 0) {
+    // Begin dictionary
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+  
+    // Add a key-value pair
+    dict_write_uint8(iter, 0, 0);
+  
+    // Send the message!
+    app_message_outbox_send();
+  }
+  
 }
 
 static void main_window_unload(Window *window) {
@@ -82,6 +141,9 @@ static void main_window_unload(Window *window) {
   bitmap_layer_destroy(s_background_layer);
 }
 
+/*
+ * Initialize
+ */
 static void init() {
 
   s_main_window = window_create();
@@ -101,6 +163,9 @@ static void init() {
   app_message_register_inbox_dropped(inbox_dropped_callback);
   app_message_register_outbox_failed(outbox_failed_callback);
   app_message_register_outbox_sent(outbox_sent_callback);
+  
+  // Open AppMessage
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
 }
 
